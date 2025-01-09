@@ -1,38 +1,77 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from app.settings import GOOGLE_API_KEY
+from app.crud import create_student, read_students, update_student, delete_student
 
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY)
 
+tools = [
+    {
+        "name": "create_student",  # Tool name must match the system message description
+        "function": create_student,
+        "parameters": {
+            "name": {"type": "string", "description": "Name of the student"},
+            "email": {"type": "string", "description": "Email address of the student"},
+            "phone": {"type": "string", "description": "Phone number of the student"},
+            "class_name": {"type": "string", "description": "Class of the student"},
+        },
+    },
+    {
+        "name": "read_students",
+        "function": read_students,
+        "parameters": {
+            "filter_by": {
+                "type": "object",
+                "properties": {
+                    "key": {"type": "string"},
+                    "value": {"type": "string"},
+                },
+                "optional": True,
+            },
+        },
+    },
+    {
+        "name": "update_student",
+        "function": update_student,
+        "parameters": {
+            "student_id": {"type": "integer"},
+            "updates": {
+                "type": "object",
+                "properties": {
+                    "key": {"type": "string"},
+                    "value": {"type": "string"},
+                },
+                "required": ["key", "value"],
+            },
+        },
+    },
+    {
+        "name": "delete_student",
+        "function": delete_student,
+        "parameters": {
+            "student_id": {"type": "integer"},
+        },
+    },
+]
+
+llm_with_tools = llm.bind_tools(tools)
+
 sys_msg = """
-You are a College Management Assistant. Your purpose is to help manage and retrieve information related to students, teachers, and administrative tasks. You interact with a backend database using pre-defined tools (CRUD operations).
+You are a College Management Assistant specializing in managing students. You can:
+- Add a student by specifying their name, email, phone, and class.
+- List all students or filter them by criteria like class.
+- Update a student's details.
+- Delete a student by their ID.
 
-### Capabilities:
-1. **Manage Students**:
-   - Add new students by collecting their details (name, email, phone, class name, grades).
-   - Update existing student records.
-   - Retrieve a list of students, optionally filtered by class name.
-   - Delete student records by their ID.
-
-2. **Manage Teachers**:
-   - Add new teachers (name, email, phone, subject).
-   - Retrieve a list of teachers, optionally filtered by their subject.
-   - Update teacher information.
-   - Delete teacher records by their ID.
-
-3. **Manage Admins**:
-   - Add new admins (name, email).
-   - Retrieve a list of all admins.
-
-4. **Chat-Based Queries**:
-   - Respond to natural language queries.
-   - Handle errors gracefully and provide helpful feedback.
-
-### Guidelines:
-- Confirm every action with clear and concise feedback.
-- Ask for missing details when necessary to perform an action.
-- Use polite and professional language.
-- Stay focused on the scope of college management tasks.
+### Example Queries:
+- "Add a student named Sarah in class 12B with email sarah@example.com and phone 98765."
+- "List all students in class 12B."
+- "Update student 1's email to newemail@example.com."
+- "Delete student with ID 1."
 """
 
-def assistant(messages):
-    return {"messages": [llm.invoke([sys_msg] + messages)]}
+def assistant(state):
+    """
+    Process queries and delegate actions to tools.
+    """
+    ai_response = llm_with_tools.invoke([sys_msg] + state["messages"])
+    return {"messages": [{"content": ai_response.content}]}
