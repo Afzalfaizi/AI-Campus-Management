@@ -1,21 +1,37 @@
 from fastapi import FastAPI
-from app.routes import router
 from app.database import create_tables
+from contextlib import asynccontextmanager
+from app.llm import agent
 
+
+# FastAPI app initialization
 app = FastAPI()
 
-@app.on_event("startup")
-def on_startup():
-    """
-    Initialize the database and create tables on app startup.
-    """
-    create_tables()
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     print("Creating Tables")
+#     create_tables()
+#     print("Tables Created")
+#     try:
+#         yield
+#     finally:
+#         print("Lifespan context ended")
 
-app.include_router(router)
+@app.get('/')
+def index():
+    return {"message": "Welcome to My College Management System"}
 
-@app.get("/")
-def root():
+
+# Chat API Endpoint
+@app.get("/chat/{query}")
+def get_content(query: str):
     """
-    Root endpoint to confirm the API is running.
+    Process chat queries and return responses
+    Uses a fixed thread_id for demonstration purposes
     """
-    return {"message": "Welcome to the College Management System. Use the /chat endpoint for queries."}
+    try:
+        config = {"configurable": {"thread_id": "2"}}
+        result = agent.invoke({"messages": [("user", query)]}, config)
+        return result
+    except Exception as e:
+        return {"output": str(e)}
