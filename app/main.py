@@ -7,6 +7,11 @@ from app.llm import agent
 # FastAPI app initialization
 app = FastAPI()
 
+@app.on_event("startup")
+def on_startup():
+    create_tables()
+
+
 # @asynccontextmanager
 # async def lifespan(app: FastAPI):
 #     print("Creating Tables")

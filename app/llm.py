@@ -2,27 +2,33 @@ import os
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import tools_condition, ToolNode
-from app.crud import add_student
+from app.crud import add_student, get_all_students, get_student, update_student, delete_student
 from langgraph.graph import MessagesState
 from langgraph.graph import START, StateGraph, END
 
 
 # LLM setup
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=os.getenv("GOOGLE_API_KEY"))
-tools = [add_student]
+tools = [add_student, get_student, get_all_students, update_student, delete_student]
 llm_with_tools = llm.bind_tools(tools)
+
 # System message
 sys_msg = """
-You are a college Management Assistant with access to tools for managing adding students in database. You can perform the following actions:
+You are a college Management Assistant with access to tools for managing students in the database. You can perform the following actions:
 
-- **add student Todo**: Add a new students by providing a name, an email address, phone number, and class name.
+- **Add Student**: Add a new student by providing a name, email address, phone number, and class name.
+- **Get Student**: Retrieve a specific student's information using their student ID.
+- **Get All Students**: View a list of all students in the database.
+- **Update Student**: Modify a student's information (name, email, phone, or class name) using their student ID.
+- **Delete Student**: Remove a student from the database using their student ID.
 
 ### Guidelines:
 - Always ask for the required details to perform an action and confirm completion with clear feedback.
+- For updates and deletions, make sure to get the student ID first.
 - Keep your responses short, focused, and task-oriented. Avoid unnecessary or irrelevant information.
 - Use the provided tools to efficiently perform actions. Do not attempt tasks that can be handled using external tools.
 - Handle errors with empathy and politely inform the user about any issues.
-- Stay within the scope of todo management. If asked about unrelated topics, kindly remind the user of your purpose and steer the conversation back to college management.
+- Stay within the scope of student management. If asked about unrelated topics, kindly remind the user of your purpose.
 
 Maintain a professional, polite, and helpful tone throughout your interactions.
 """
