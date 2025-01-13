@@ -3,7 +3,6 @@ from app.database import create_tables
 from contextlib import asynccontextmanager
 from app.llm import agent
 
-
 # FastAPI app initialization
 app = FastAPI()
 
@@ -11,21 +10,9 @@ app = FastAPI()
 def on_startup():
     create_tables()
 
-
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     print("Creating Tables")
-#     create_tables()
-#     print("Tables Created")
-#     try:
-#         yield
-#     finally:
-#         print("Lifespan context ended")
-
 @app.get('/')
 def index():
-    return {"message": "Welcome to My College Management System"}
-
+    return {"message": "Welcome to My AI College Management System"}
 
 # Chat API Endpoint
 @app.get("/chat/{query}")
