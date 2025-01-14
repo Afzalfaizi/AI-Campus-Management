@@ -1,6 +1,6 @@
 from sqlmodel import Session
 from app.database import engine
-from app.models import Student
+from app.models import Student, Teacher
 
 def add_student(name: str, email: str, phone: str, class_name: str) -> Student:
     """
@@ -90,6 +90,66 @@ def delete_student(student_id: int) -> bool:
         student = session.get(Student, student_id)
         if student:
             session.delete(student)
+            session.commit()
+            return True
+        return False
+
+def add_teacher(name: str, email: str, phone: str, department: str, subject: str) -> Teacher:
+    """
+    Add a new teacher to the database.
+    """
+    teacher = Teacher(name=name, email=email, phone=phone, department=department, subject=subject)
+    with Session(engine) as session:
+        session.add(teacher)
+        session.commit()
+        session.refresh(teacher)
+    return teacher
+
+def get_teacher(teacher_id: int) -> Teacher | None:
+    """
+    Get a teacher from the database by ID.
+    """
+    with Session(engine) as session:
+        return session.get(Teacher, teacher_id)
+
+def get_all_teachers() -> list[Teacher]:
+    """
+    Get all teachers from the database.
+    """
+    with Session(engine) as session:
+        return session.query(Teacher).all()
+
+def update_teacher(teacher_id: int, name: str | None = None, email: str | None = None,
+                  phone: str | None = None, department: str | None = None, 
+                  subject: str | None = None) -> Teacher | None:
+    """
+    Update a teacher's information in the database.
+    """
+    with Session(engine) as session:
+        teacher = session.get(Teacher, teacher_id)
+        if teacher:
+            if name is not None:
+                teacher.name = name
+            if email is not None:
+                teacher.email = email
+            if phone is not None:
+                teacher.phone = phone
+            if department is not None:
+                teacher.department = department
+            if subject is not None:
+                teacher.subject = subject
+            session.commit()
+            session.refresh(teacher)
+        return teacher
+
+def delete_teacher(teacher_id: int) -> bool:
+    """
+    Delete a teacher from the database.
+    """
+    with Session(engine) as session:
+        teacher = session.get(Teacher, teacher_id)
+        if teacher:
+            session.delete(teacher)
             session.commit()
             return True
         return False
