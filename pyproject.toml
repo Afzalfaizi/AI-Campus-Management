@@ -23,6 +23,7 @@ sqlmodel = "^0.0.22"
 psycopg-binary = "^3.2.3"
 psycopg = "^3.2.3"
 langgraph = "^0.2.61"
+python-multipart = "^0.0.20"
 
 
 [build-system]
