@@ -16,8 +16,8 @@ def create_tables():
     This function drops existing tables and creates new ones.
     """
     try:
-        # Drop all existing tables
-        SQLModel.metadata.drop_all(engine)
+        # # Drop all existing tables
+        # SQLModel.metadata.drop_all(engine)
         # Create new tables
         SQLModel.metadata.create_all(engine)
         print("Tables created successfully")
