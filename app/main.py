@@ -6,7 +6,7 @@ import io
 
 app = FastAPI(
     title="AI College Management System",
-    description="A smart college management system with AI-powered chat interface",
+    description="A smart college management system with AI-powered (LangChain & LangGraph) chat interface",
     version="1.0.0"
 )
 
