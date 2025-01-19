@@ -10,6 +10,7 @@ from app.crud import (
     search_students_by_status, add_teacher, get_teacher, get_all_teachers,
     update_teacher, delete_teacher
 )
+from app.models import UserRole
 
 # Initialize LLM
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY)
@@ -23,89 +24,37 @@ tools = [
 
 llm_with_tools = llm.bind_tools(tools)
 
-# System message defining AI assistant's capabilities
-sys_msg = """
-You are a college Management Assistant with access to tools for managing student records. You can perform the following actions:
-
-Student Management:
-1. Data Import:
-   - Bulk import student records from Excel/CSV files
-   - Required fields: roll number, name, DOB, class, section, gender, status, CNIC/B-Form, contact details, etc.
-
-2. Search and Retrieval:
-   - Search by Roll Number
-   - Search by Class and Section
-   - Search by Student Status
-   - Get Complete Student Details
-   - List All Students
-
-3. Data Fields Available:
-   - Student Name
-   - Roll Number
-   - Date of Birth
-   - Class and Section
-   - Gender (male/female/other)
-   - Current Status (active/inactive/graduated/suspended)
-   - CNIC/B-Form Number
-   - Contact Information
-   - Email Address
-   - Father/Guardian Details
-   - Permanent Address
-   - Religion
-
-4. Teacher Management:
-   - Add, Update, Delete Teacher records
-   - View Teacher Information
-   - List All Teachers
-
-Student Management Operations:
-1. Add Student: Provide all required student details
-2. Update Student: Update specific fields by student ID
-   - All fields are optional for updates
-   - Only provided fields will be updated
-   - Available fields:
-     * roll_no
-     * name
-     * date_of_birth (YYYY-MM-DD)
-     * class_name
-     * section
-     * gender
-     * current_status
-     * cnic_or_bform
-     * contact_no
-     * email
-     * father_guardian_name
-     * father_guardian_contact
-     * father_guardian_cnic
-     * permanent_address
-     * religion
-3. Delete Student: Remove student by ID
-4. Search Students:
-   - By roll number
-   - By class and section
-   - By current status
-
-Guidelines:
-- Verify all required fields when adding new students
-- Ensure proper date format (YYYY-MM-DD) for DOB
-- CNIC/B-Form numbers must be unique
-- Roll numbers must be unique
-- Handle data with confidentiality and proper authorization
-
-Please ask for specific search criteria to help retrieve the exact information needed.
-"""
+def get_role_specific_system_message(user_role: UserRole) -> str:
+    """Get role-specific system message."""
+    base_msg = "You are a college Management Assistant. "
+    
+    if user_role == UserRole.ADMIN:
+        return base_msg + """
+        You have full administrative access to:
+        - Manage all student records
+        - Manage all teacher records
+        - View and modify system settings
+        """
+    elif user_role == UserRole.TEACHER:
+        return base_msg + """
+        You have access to:
+        - View your assigned students
+        - Update grades and attendance
+        - View your own profile
+        """
+    else:  # STUDENT
+        return base_msg + """
+        You have access to:
+        - View your own academic records
+        - View your attendance
+        - Update your contact information
+        """
 
 def assistant(state: MessagesState):
-    """
-    Process messages and generate responses using the LLM.
-    
-    Args:
-        state (MessagesState): Current conversation state
-
-    Returns:
-        dict: Generated response messages
-    """
-    return {"messages": [llm_with_tools.invoke([sys_msg] + state["messages"][-10:])]}
+    """Process messages based on user role."""
+    user_role = state.get("configurable", {}).get("user_role", UserRole.STUDENT)
+    system_message = get_role_specific_system_message(user_role)
+    return {"messages": [llm_with_tools.invoke([system_message] + state["messages"][-10:])]}
 
 # Configure the graph
 builder = StateGraph(MessagesState)
