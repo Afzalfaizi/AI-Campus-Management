@@ -22,7 +22,7 @@ from typing import Optional
 
 app = FastAPI(
     title="AI College Management System",
-    description="A smart college management system with AI-powered chat interface and OAuth authentication",
+    description="A smart college management system with AI langraph-powered chat interface and OAuth authentication",
     version="1.0.0"
 )
 
