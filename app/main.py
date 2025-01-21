@@ -90,7 +90,7 @@ async def register(username: str, email: str, password: str, role: UserRole):
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username or email already registered"
+                detail="Username or email already registered try with other username or email"
             )
         
         # Create new user
