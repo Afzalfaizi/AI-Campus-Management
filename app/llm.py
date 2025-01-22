@@ -47,7 +47,7 @@ def get_role_specific_system_message(user_role: UserRole) -> str:
         You have access to:
         - View your own academic records
         - View your attendance
-        - Update your contact information
+        - Update your contact information , view you class Schedule
         """
 
 def assistant(state: MessagesState):
