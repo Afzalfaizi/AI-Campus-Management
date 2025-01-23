@@ -22,7 +22,7 @@ from typing import Optional
 
 app = FastAPI(
     title="AI College Management System",
-    description="A smart college management system with AI langraph-powered chat interface and OAuth authentication",
+    description="A smart college management system with AI langraph-powered chat interface.",
     version="1.0.0"
 )
 
@@ -41,7 +41,7 @@ def index():
     Returns:
         dict: Welcome message
     """
-    return {"message": "Welcome to My AI College Management System"}
+    return {"message": "Welcome to My AI Based College Management System(Agent)"}
 
 @app.post("/upload-students/")
 async def upload_students(file: UploadFile = File(...)):
