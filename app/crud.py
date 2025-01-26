@@ -4,7 +4,8 @@ import pandas as pd
 from datetime import datetime, date
 from fastapi import HTTPException
 from app.database import engine
-from app.models import Student, Teacher, StudentStatus, Gender
+from app.models import Student, Teacher, StudentStatus, Gender, User, UserRole
+from app.utils import get_password_hash
 
 def add_student(
     roll_no: str,
@@ -364,3 +365,27 @@ def delete_teacher(teacher_id: int) -> bool:
             session.commit()
             return True
         return False
+
+def add_admin(username: str, email: str, password: str) -> User:
+    """
+    Add a new admin to the database.
+    
+    Args:
+        username (str): Unique username for the admin
+        email (str): Email address of the admin
+        password (str): Password for the admin
+
+    Returns:
+        User: Created admin user object
+    """
+    new_user = User(
+        username=username,
+        email=email,
+        hashed_password=get_password_hash(password),
+        role=UserRole.ADMIN  # Set the role as ADMIN
+    )
+    with Session(engine) as session:
+        session.add(new_user)
+        session.commit()
+        session.refresh(new_user)
+    return new_user

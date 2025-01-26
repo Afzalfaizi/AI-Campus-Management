@@ -8,7 +8,7 @@ from app.crud import (
     add_student, get_student, get_all_students, update_student, delete_student,
     search_student_by_roll_no, search_students_by_class_section,
     search_students_by_status, add_teacher, get_teacher, get_all_teachers,
-    update_teacher, delete_teacher
+    update_teacher, delete_teacher, add_admin
 )
 from app.models import UserRole
 
@@ -54,6 +54,18 @@ def assistant(state: MessagesState):
     """Process messages based on user role."""
     user_role = state.get("configurable", {}).get("user_role", UserRole.STUDENT)
     system_message = get_role_specific_system_message(user_role)
+    
+    # Check for admin addition command
+    if user_role == UserRole.ADMIN:
+        # Example command: "Add admin username email password"
+        if "add admin" in state["messages"][-1]:
+            _, _, username, email, password = state["messages"][-1].split()
+            try:
+                new_admin = add_admin(username, email, password)
+                return {"messages": [f"Admin {new_admin.username} added successfully."]}
+            except Exception as e:
+                return {"messages": [f"Error adding admin: {str(e)}"]}
+    
     return {"messages": [llm_with_tools.invoke([system_message] + state["messages"][-10:])]}
 
 # Configure the graph
