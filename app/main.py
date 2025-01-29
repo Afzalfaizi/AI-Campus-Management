@@ -30,13 +30,14 @@ app = FastAPI(
 def on_startup():
     """
     Initialize the application by creating database tables.
+    This function is called when the application starts.
     """
     create_tables()
 
 @app.get('/')
 def index():
     """
-    Root endpoint returning welcome message.
+    Root endpoint returning a welcome message.
     
     Returns:
         dict: Welcome message
@@ -57,6 +58,7 @@ async def upload_students(file: UploadFile = File(...)):
     Raises:
         HTTPException: If file format is invalid or processing fails
     """
+    # Check if the uploaded file has a valid format
     if not file.filename.endswith(('.csv', '.xlsx', '.xls')):
         raise HTTPException(
             status_code=400,
@@ -67,17 +69,20 @@ async def upload_students(file: UploadFile = File(...)):
     file_type = 'csv' if file.filename.endswith('.csv') else 'excel'
     
     try:
+        # Process the file and import students
         students = bulk_import_students(content, file_type)
         return {
             "message": f"Successfully imported {len(students)} students",
             "students": [{"id": s.id, "roll_no": s.roll_no, "name": s.name} for s in students]
         }
     except Exception as e:
+        # Handle any errors during the import process
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/register")
 async def register(username: str, email: str, password: str, role: UserRole):
     """User registration endpoint."""
+    # Validate the user role
     if role not in [UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -110,6 +115,7 @@ async def register(username: str, email: str, password: str, role: UserRole):
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     """Login endpoint for username/password authentication."""
     with Session(engine) as session:
+        # Retrieve user by username
         user = session.query(User).filter(User.username == form_data.username).first()
         if not user or not verify_password(form_data.password, user.hashed_password):
             raise HTTPException(
@@ -118,6 +124,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
+        # Create access token for the user
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
             data={"sub": user.username}, expires_delta=access_token_expires
@@ -136,6 +143,7 @@ async def auth_callback(request: Request):
     token = await oauth.google.authorize_access_token(request)
     user = await get_oauth_user("google", token)
     if user:
+        # Create access token for the authenticated user
         access_token = create_access_token(
             data={"sub": user.username},
             expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -164,9 +172,11 @@ async def get_chat_response(
                 "user_role": current_user.role
             }
         }
+        # Invoke the AI agent with the user's query
         result = agent.invoke({"messages": [("user", query)]}, config)
         return result
     except Exception as e:
+        # Handle any errors during the chat processing
         return {"error": str(e)}
 
 # Protected admin routes
