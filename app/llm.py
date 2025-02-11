@@ -40,7 +40,9 @@ def get_role_specific_system_message(user_role: UserRole) -> str:
         You have access to:
         - View your assigned students
         - Update grades and attendance
-        - View your own profile
+        - View your own profile 
+        - view your meeting schdule
+        
         """
     else:  # STUDENT
         return base_msg + """
